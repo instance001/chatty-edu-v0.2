@@ -1,0 +1,7 @@
+C:\Users\User\Desktop\chatty-edu_v0.1\target\debug\deps\dirs_sys-c7fb6ea1685f05b5.d: C:\Users\User\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\dirs-sys-0.4.1\src\lib.rs
+
+C:\Users\User\Desktop\chatty-edu_v0.1\target\debug\deps\libdirs_sys-c7fb6ea1685f05b5.rlib: C:\Users\User\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\dirs-sys-0.4.1\src\lib.rs
+
+C:\Users\User\Desktop\chatty-edu_v0.1\target\debug\deps\libdirs_sys-c7fb6ea1685f05b5.rmeta: C:\Users\User\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\dirs-sys-0.4.1\src\lib.rs
+
+C:\Users\User\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\dirs-sys-0.4.1\src\lib.rs:

@@ -1,0 +1,12 @@
+[package]
+name = "chatty-edu"
+version = "0.1.0"
+edition = "2021"
+authors = ["Instance001 + Symbound Collective"]
+description = "Chatty-EDU — A modular local-first learning assistant built on Rust. v0.1 spine build."
+license = "AGPL-3.0-or-later"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+dirs = "5.0"

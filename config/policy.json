@@ -1,0 +1,6 @@
+{
+  "allow_external_exe_modules": false,
+  "allow_network": false,
+  "allow_file_export": true,
+  "allow_clipboard": true
+}

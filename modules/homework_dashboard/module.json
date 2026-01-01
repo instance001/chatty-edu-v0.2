@@ -1,0 +1,14 @@
+{
+  "id": "homework_dashboard",
+  "title": "Homework Dashboard",
+  "version": "0.1.0",
+  "audience": [
+    "student",
+    "teacher"
+  ],
+  "entry": {
+    "type": "markdown",
+    "path": "content.md"
+  },
+  "order": 10
+}

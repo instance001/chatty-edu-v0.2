@@ -1,0 +1,20 @@
+{
+  "version": "1.0",
+  "school_id": "demo-school",
+  "class_id": "yr7-math-a",
+  "created_at": "2026-01-01T00:00:00Z",
+  "assignments": [
+    {
+      "id": "hw-001",
+      "title": "Fractions Basics",
+      "subject": "Math",
+      "year_level": "7",
+      "due_at": "2026-01-05T09:00:00Z",
+      "instructions_md": "Solve the fraction problems in the attached worksheet.",
+      "attachments": [],
+      "allow_games": false,
+      "allow_ai_premark": true,
+      "max_score": 100
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "Chalkboard Dark",
+  "font_scale": 1.0,
+  "rounding": 10,
+  "spacing": 8,
+  "colors": {
+    "bg": "#0E0F10",
+    "panel": "#1A1C1E",
+    "text": "#EDEDED",
+    "muted_text": "#B8B8B8",
+    "accent": "#7AA2FF",
+    "danger": "#FF6B6B"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "base_path": null,
+  "default_theme": "classic_light.json",
+  "default_tabs": [
+    "home",
+    "chat"
+  ]
+}

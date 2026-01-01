@@ -1,0 +1,14 @@
+{
+  "name": "Classic Light",
+  "font_scale": 1.0,
+  "rounding": 8,
+  "spacing": 8,
+  "colors": {
+    "bg": "#FFFFFF",
+    "panel": "#F4F4F4",
+    "text": "#111111",
+    "muted_text": "#444444",
+    "accent": "#2A6DF4",
+    "danger": "#CC3333"
+  }
+}

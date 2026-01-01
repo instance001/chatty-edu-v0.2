@@ -1,0 +1,14 @@
+{
+  "name": "High Contrast",
+  "font_scale": 1.1,
+  "rounding": 6,
+  "spacing": 10,
+  "colors": {
+    "bg": "#000000",
+    "panel": "#000000",
+    "text": "#FFFFFF",
+    "muted_text": "#DDDDDD",
+    "accent": "#00FFFF",
+    "danger": "#FF00FF"
+  }
+}

@@ -1,8 +1,10 @@
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
+use std::env;
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
-use std::time::SystemTime;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::settings::Settings;
 
@@ -65,6 +67,12 @@ pub struct HomeworkSubmission {
     pub ai_premark: Option<AiPremark>,
     #[serde(default)]
     pub attachments: Vec<String>,
+    #[serde(default)]
+    pub events: Vec<SubmissionEvent>,
+    #[serde(default)]
+    pub final_hash: Option<String>,
+    #[serde(default)]
+    pub summary: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -152,41 +160,38 @@ pub fn load_pack_from_file(path: &Path) -> io::Result<HomeworkPack> {
 
 pub fn find_latest_pack(base: &Path) -> io::Result<Option<(PathBuf, HomeworkPack)>> {
     let dir = base.join("homework").join("assigned");
+    // Always try to sync packs from the repo folder into the runtime data dir
+    // so teacher/student dashboards see the latest files when running from source.
+    if let Err(e) = sync_homework_packs_from_repo(base) {
+        eprintln!("[homework] Could not sync sample packs: {e}");
+    }
     if !dir.exists() {
         return Ok(None);
     }
 
-    let mut newest: Option<(PathBuf, SystemTime)> = None;
+    let mut newest: Option<(PathBuf, HomeworkPack, i128)> = None;
     for entry in fs::read_dir(&dir)? {
         let entry = entry?;
         let path = entry.path();
         if !path.is_file() {
             continue;
         }
-        if path.extension().map(|e| e == "json").unwrap_or(false)
-            && path
-                .file_name()
-                .map(|n| n.to_string_lossy().contains("homework_pack"))
-                .unwrap_or(false)
-        {
-            let meta = entry.metadata()?;
-            if let Ok(modified) = meta.modified() {
-                match &newest {
-                    Some((_, ts)) if *ts >= modified => {}
-                    _ => newest = Some((path, modified)),
-                }
-            }
+        if !is_pack_file(&path) {
+            continue;
         }
-    }
 
-    if let Some((path, _)) = newest {
         let contents = fs::read_to_string(&path)?;
         let pack: HomeworkPack = serde_json::from_str(&contents)
             .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("pack parse error: {e}")))?;
-        Ok(Some((path, pack)))
-    } else {
-        Ok(None)
+        let ts = pack_timestamp(&pack, &entry.metadata().ok());
+
+        match &newest {
+            Some((_, _, current_ts)) if *current_ts >= ts => {}
+            _ => newest = Some((path, pack, ts)),
+        }
     }
+
+    Ok(newest.map(|(path, pack, _)| (path, pack)))
 }
 
 pub fn apply_pack_policy(settings: &mut Settings, pack: &HomeworkPack) {
@@ -224,6 +229,26 @@ pub fn save_submission_with_answers(
     };
 
     let premark = simple_premark(answers_text);
+    let now_ms = unix_ms_now();
+    let mut events = Vec::new();
+    let start_event = build_event("", now_ms, "start", None, Some("session_start"));
+    let answer_event = build_event(
+        &start_event.hash,
+        unix_ms_now(),
+        "answer",
+        Some("freeform"),
+        Some(answers_text),
+    );
+    let finalize_event = build_event(
+        &answer_event.hash,
+        unix_ms_now(),
+        "finalize",
+        None,
+        Some("submitted"),
+    );
+    events.push(start_event);
+    events.push(answer_event);
+    events.push(finalize_event.clone());
 
     let submission = HomeworkSubmission {
         version: "1.0".to_string(),
@@ -237,6 +262,9 @@ pub fn save_submission_with_answers(
         answers: vec![],
         ai_premark: Some(premark),
         attachments: attachments.to_vec(),
+        events,
+        final_hash: Some(finalize_event.hash),
+        summary: None,
     };
 
     let filename = format!("submission_{}_{}.json", assignment_id, student_id);
@@ -286,9 +314,144 @@ pub fn load_submission_summaries(base: &Path) -> io::Result<Vec<SubmissionSummar
     Ok(out)
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SubmissionEvent {
+    pub t: i64,
+    #[serde(rename = "type")]
+    pub event_type: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub qid: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub payload: Option<String>,
+    pub prev: String,
+    pub hash: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct EventData {
+    t: i64,
+    #[serde(rename = "type")]
+    event_type: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    qid: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    payload: Option<String>,
+    prev: String,
+}
+
+fn build_event(
+    prev: &str,
+    t: i64,
+    event_type: &str,
+    qid: Option<&str>,
+    payload: Option<&str>,
+) -> SubmissionEvent {
+    let data = EventData {
+        t,
+        event_type: event_type.to_string(),
+        qid: qid.map(|s| s.to_string()),
+        payload: payload.map(|s| s.to_string()),
+        prev: prev.to_string(),
+    };
+    let canonical = serde_json::to_string(&data).unwrap_or_default();
+    let mut hasher = Sha256::new();
+    hasher.update(prev.as_bytes());
+    hasher.update(canonical.as_bytes());
+    let hash = format!("{:x}", hasher.finalize());
+    SubmissionEvent {
+        t,
+        event_type: event_type.to_string(),
+        qid: qid.map(|s| s.to_string()),
+        payload: payload.map(|s| s.to_string()),
+        prev: prev.to_string(),
+        hash,
+    }
+}
+
+fn unix_ms_now() -> i64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis() as i64
+}
+
+fn is_pack_file(path: &Path) -> bool {
+    path.is_file()
+        && path.extension().map(|e| e == "json").unwrap_or(false)
+        && path
+            .file_name()
+            .map(|n| n.to_string_lossy().contains("homework_pack"))
+            .unwrap_or(false)
+}
+
+/// Seed the runtime homework/assigned folder with any packs that ship in the repo (homework/assigned)
+/// so dashboards have data out of the box when running from source. If files already exist in the
+/// runtime dir, newer copies from the repo will replace them.
+fn sync_homework_packs_from_repo(base: &Path) -> io::Result<()> {
+    let target = base.join("homework").join("assigned");
+    let cwd = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+    let fallback = cwd.join("homework").join("assigned");
+
+    if target == fallback {
+        return Ok(()); // nothing to seed if base is already the repo root
+    }
+    if !fallback.exists() {
+        return Ok(());
+    }
+
+    fs::create_dir_all(&target)?;
+
+    let mut copied = 0usize;
+    for entry in fs::read_dir(&fallback)? {
+        let entry = entry?;
+        let src = entry.path();
+        if !is_pack_file(&src) {
+            continue;
+        }
+        let dest = target.join(entry.file_name());
+        let should_copy = if dest.exists() {
+            let src_time = fs::metadata(&src).and_then(|m| m.modified()).ok();
+            let dest_time = fs::metadata(&dest).and_then(|m| m.modified()).ok();
+            match (src_time, dest_time) {
+                (Some(s), Some(d)) => s > d,
+                (Some(_), None) => true,
+                _ => false,
+            }
+        } else {
+            true
+        };
+
+        if should_copy {
+            fs::copy(&src, &dest)?;
+            copied += 1;
+        }
+    }
+
+    if copied > 0 {
+        eprintln!("[homework] Copied {copied} sample pack(s) into {}", target.display());
+    }
+    Ok(())
+}
+
 fn iso_now() -> String {
     let now = chrono::Utc::now();
     now.to_rfc3339()
+}
+
+fn pack_timestamp(pack: &HomeworkPack, meta: &Option<std::fs::Metadata>) -> i128 {
+    if let Ok(dt) = chrono::DateTime::parse_from_rfc3339(&pack.created_at) {
+        return dt.timestamp_millis() as i128;
+    }
+    meta.as_ref()
+        .and_then(|m| m.modified().ok())
+        .map(|t| system_time_millis(t))
+        .unwrap_or(0)
+}
+
+fn system_time_millis(t: SystemTime) -> i128 {
+    t.duration_since(UNIX_EPOCH)
+        .map(|d| d.as_millis() as i128)
+        .unwrap_or(0)
 }
 
 fn simple_premark(text: &str) -> AiPremark {

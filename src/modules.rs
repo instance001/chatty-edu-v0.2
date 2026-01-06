@@ -49,7 +49,7 @@ pub struct LoadedModule {
 
 pub fn load_modules(base: &Path) -> io::Result<Vec<LoadedModule>> {
     let modules_root = base.join("modules");
-    ensure_builtin_homework_module(&modules_root)?;
+    ensure_builtin_modules(&modules_root)?;
     let mut results = Vec::new();
 
     if !modules_root.exists() {
@@ -111,28 +111,56 @@ pub fn load_modules(base: &Path) -> io::Result<Vec<LoadedModule>> {
     Ok(results)
 }
 
-fn ensure_builtin_homework_module(modules_root: &Path) -> io::Result<()> {
+fn ensure_builtin_modules(modules_root: &Path) -> io::Result<()> {
     fs::create_dir_all(modules_root)?;
-    let folder = modules_root.join("homework_dashboard");
+
+    ensure_module(
+        modules_root,
+        "homework_dashboard",
+        ModuleManifest {
+            id: "homework_dashboard".to_string(),
+            title: "Homework Dashboard".to_string(),
+            description: Some("Built-in view for packs and submissions".to_string()),
+            version: Some("1.0.0".to_string()),
+            author: Some("Chatty-EDU".to_string()),
+            roles: vec!["teacher".to_string()],
+            entry: ModuleEntry::BuiltinPanel {
+                target: "homework_dashboard".to_string(),
+            },
+            icon: None,
+            permissions: vec![],
+        },
+    )?;
+
+    ensure_module(
+        modules_root,
+        "homework_assignments",
+        ModuleManifest {
+            id: "homework_assignments".to_string(),
+            title: "Homework & Revision".to_string(),
+            description: Some("View homework questions and revision tips".to_string()),
+            version: Some("1.0.0".to_string()),
+            author: Some("Chatty-EDU".to_string()),
+            roles: vec!["teacher".to_string(), "student".to_string()],
+            entry: ModuleEntry::BuiltinPanel {
+                target: "homework_assignments".to_string(),
+            },
+            icon: None,
+            permissions: vec![],
+        },
+    )?;
+
+    Ok(())
+}
+
+fn ensure_module(modules_root: &Path, folder_name: &str, manifest: ModuleManifest) -> io::Result<()> {
+    let folder = modules_root.join(folder_name);
     let manifest_path = folder.join("module.json");
     if manifest_path.exists() {
         return Ok(());
     }
 
     fs::create_dir_all(&folder)?;
-    let manifest = ModuleManifest {
-        id: "homework_dashboard".to_string(),
-        title: "Homework Dashboard".to_string(),
-        description: Some("Built-in view for packs and submissions".to_string()),
-        version: Some("1.0.0".to_string()),
-        author: Some("Chatty-EDU".to_string()),
-        roles: vec!["teacher".to_string(), "student".to_string()],
-        entry: ModuleEntry::BuiltinPanel {
-            target: "homework_dashboard".to_string(),
-        },
-        icon: None,
-        permissions: vec![],
-    };
     let json = serde_json::to_string_pretty(&manifest)?;
     fs::write(&manifest_path, json)?;
     Ok(())

@@ -1,0 +1,32 @@
+{
+  "version": "1.0",
+  "school_id": "school",
+  "class_id": "class-001",
+  "created_at": "2026-01-04T15:00:00Z",
+  "assignments": [
+    {
+      "id": "eng-reading-001",
+      "title": "Reading Trends",
+      "subject": "English",
+      "year_level": "7",
+      "due_at": "2026-01-18",
+      "instructions_md": "Self-contained prompt (no attachment needed). You have a chart of books read per month.\\n- Which month had the most reading?\\n- Which month had the least?\\n- Describe one pattern you notice across the months.\\n- Suggest one action to improve next month.",
+      "attachments": [],
+      "allow_games": false,
+      "allow_ai_premark": true,
+      "max_score": 100
+    },
+    {
+      "id": "sci-gradient-001",
+      "title": "Soil Moisture Gradient",
+      "subject": "Science",
+      "year_level": "7",
+      "due_at": "2026-01-19",
+      "instructions_md": "You measured soil moisture from river bank to hilltop. Use the attached field notes.\\n- Sketch a simple gradient diagram from wettest to driest.\\n- Explain why moisture changes across the gradient (2 sentences).\\n- Name one living thing that prefers each end of the gradient.",
+      "attachments": ["attachments/soil_moisture_gradient.txt"],
+      "allow_games": false,
+      "allow_ai_premark": true,
+      "max_score": 100
+    }
+  ]
+}

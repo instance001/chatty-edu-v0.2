@@ -50,6 +50,14 @@ pub struct Settings {
     pub mode: String,
     pub default_year_level: String,
     pub teacher_mode: String,
+    #[serde(default = "default_homework_hints_only")]
+    pub homework_hints_only: bool,
+    #[serde(default = "default_teacher_pin")]
+    pub teacher_pin: String,
+    #[serde(default = "default_secret_question")]
+    pub teacher_secret_question: String,
+    #[serde(default = "default_secret_answer")]
+    pub teacher_secret_answer: String,
     #[serde(default)]
     pub student: StudentProfile,
     pub janet: JanetConfig,
@@ -68,6 +76,22 @@ pub struct StudentProfile {
     pub student_name: String,
     #[serde(default)]
     pub class_id: String,
+}
+
+pub fn default_teacher_pin() -> String {
+    "0000".to_string()
+}
+
+pub fn default_secret_question() -> String {
+    "What is your favourite school subject?".to_string()
+}
+
+pub fn default_secret_answer() -> String {
+    "math".to_string()
+}
+
+pub fn default_homework_hints_only() -> bool {
+    true
 }
 
 pub fn default_base_path() -> PathBuf {
@@ -96,6 +120,7 @@ pub fn ensure_base_folders(base: &Path) -> io::Result<()> {
         base.join("config"),
         base.join("runtime"),
         base.join("themes"),
+        base.join("models"),
     ];
 
     for d in dirs {
@@ -132,6 +157,10 @@ pub fn load_or_init_settings(base: &Path) -> io::Result<Settings> {
         mode: "gui".to_string(),
         default_year_level: "year_3".to_string(),
         teacher_mode: "class".to_string(),
+        homework_hints_only: default_homework_hints_only(),
+        teacher_pin: default_teacher_pin(),
+        teacher_secret_question: default_secret_question(),
+        teacher_secret_answer: default_secret_answer(),
         student: StudentProfile {
             student_id: "student-id-placeholder".to_string(),
             student_name: "Student Name".to_string(),
@@ -141,12 +170,12 @@ pub fn load_or_init_settings(base: &Path) -> io::Result<Settings> {
             enabled: true,
             block_swears: true,
             block_mature_topics: true,
-            fallback_message: "Let's ask a teacher or parent about that one.".to_string(),
+            fallback_message: "Let's switch topics. I'm here for school-safe chat and study tips.".to_string(),
         },
         model: ModelConfig {
             name: "phi-mini-placeholder".to_string(),
             path: base
-                .join("runtime")
+                .join("models")
                 .join("model.gguf")
                 .to_string_lossy()
                 .to_string(),

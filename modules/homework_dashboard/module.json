@@ -2,10 +2,7 @@
   "id": "homework_dashboard",
   "title": "Homework Dashboard",
   "version": "0.1.0",
-  "audience": [
-    "student",
-    "teacher"
-  ],
+  "roles": ["teacher"],
   "entry": {
     "type": "markdown",
     "path": "content.md"

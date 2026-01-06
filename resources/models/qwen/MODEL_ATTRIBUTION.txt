@@ -1,0 +1,7 @@
+Model: Qwen2.5-1.5B-Instruct-GGUF (Q4_K_M)
+
+Source: Hugging Face (Qwen/Qwen2.5-1.5B-Instruct-GGUF)
+
+License: Apache License 2.0
+
+Notes: Weights redistributed unchanged.

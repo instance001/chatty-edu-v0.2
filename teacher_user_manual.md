@@ -1,81 +1,52 @@
-# Chatty-EDU Teacher Manual (v0.3)
+# Chatty-EDU Teacher Manual (v0.4)
 
-Audience: Teachers and school IT with no prior experience. Everything runs offline by default; no accounts or cloud.
+Audience: teachers and school IT. Everything runs offline by default; no accounts or cloud calls.
 
-## 1) What you need
-- A Windows PC (builds target Windows first).
-- Rust toolchain (install via https://rustup.rs).
-- Optional: a USB stick if you want a fully portable data folder.
+## What you need
+- Windows PC (first target).
+- Rust toolchain (`https://rustup.rs`) and LLVM/Clang (`LIBCLANG_PATH` set to its `bin`) if building.
+- Optional: USB for portable data (`--base-path <USB path>`).
 
-## 2) Install and run
-1. Download or clone the repo.
-2. Open a terminal in the project folder.
-3. Build and run GUI (default):  
-   ```bash
-   cargo run -- --mode gui
-   ```
-   Run CLI instead:  
-   ```bash
-   cargo run -- --mode cli
-   ```
-4. Data location: by default, the app uses `./data` next to the executable. To use a custom location (USB or network drive), add `--base-path <path>`:
-   ```bash
-   cargo run -- --mode gui --base-path D:\ChattyData
-   ```
+## First run (GUI, recommended)
+1) Build/run: `cargo run -- --mode gui` (add `--base-path ...` for a USB path).
+2) Models (offline AI):
+   - Bring your own GGUF model (none is included in this repo).
+   - Drop any GGUF into `data/models/`, then File -> Models to select. Large models may fail today; better handling is planned.
+   - Model guidance/licensing notes: see `resources/models/` (e.g., `resources/models/qwen/README.md`).
+3) Teacher lock:
+   - Default PIN `0000`. Teacher menu → unlock with PIN (or secret answer if set).
+   - While unlocked: change PIN, set secret question/answer, adjust game and hint settings. Lock when done.
+4) Import/build packs:
+  - Home tab → “Import pack file” (copies to `data/homework/assigned/`). Sample pack: `resources/homework_pack_sample_bundle.json` (copy into your data folder or import directly). If you use the sample attachment, copy `resources/attachments/` alongside the pack.
+   - Or use Pack builder to create/export a pack.
+5) Review + tutor:
+   - Home tab + Homework Dashboard: assignments, filters, submissions, metrics; Teacher menu shows submissions summary.
+   - Homework & Revision module: “Ask for hints” + “LLM homework helper” tied to selected assignment; hints-only mode is teacher-configurable.
+   - Submissions are written to `data/homework/completed/` and include a hash-chained event log (start/answer/hint/retry/finalize) plus a final_hash for tamper-evidence and telemetry.
 
-## 3) Data layout (auto-created)
-- `config/` – settings, UI state
-- `homework/assigned/` – homework packs to distribute (`homework_pack_*.json`)
-- `homework/completed/` – student submissions (`submission_*.json`)
-- `modules/` – module manifests (a built-in Homework Dashboard is auto-created)
-- `themes/` – active theme + presets
-- `runtime/`, `logs/`, `revision/`, `ide/` – reserved for expansion
+## Homework basics
+- Packs are JSON (`homework_pack_*.json`). Place/import into `homework/assigned/`.
+- Students: select assignment, fill “Submit work,” attach files if allowed, then “Export submission file” → `submission_<assignment_id>_<student>.json` in `homework/completed/`.
+- Collect student submissions and place them in your `homework/completed/`; click “Rescan packs + submissions.”
 
-## 4) Key concepts
-- **Pack**: a JSON file with one or more assignments (title, subject, due date, games allowed, etc.).
-- **Submission**: a JSON file a student exports after completing homework; can include attachments and auto pre-mark feedback.
-- **Metrics**: in the GUI, view class/subject averages and per-student performance; filters for assignment, subject, and multi-student selection.
-- **Modules**: menu of drop-in tools; the built-in Homework Dashboard ships by default.
+## Revision basics
+- Students can reopen any pack to practice.
+- Tutor (in Homework & Revision) and Chat can give hints/steps, not full answers; hints-only mode can be enforced.
 
-## 5) Teacher CLI quick commands
-Run CLI mode first: `cargo run -- --mode cli`
-- `teacher` → enter teacher console (PIN is stubbed)
-  - `create_pack` → guided single-assignment pack builder
-  - `create_pack_multi` → guided multi-assignment builder
-  - `export_pack_template` → writes a sample pack JSON to `homework/assigned/`
-  - `import_pack <path>` → copy a pack into `homework/assigned/` and apply policy (games off if set)
-  - `import_submissions` → summarize all `submission_*.json` in `homework/completed/`
-  - `show_completed` / `homework table` → list completed homework (legacy CLI table)
-  - Game controls: `games on/off`, `allow_games_in_class`, `forbid_games_in_class`
-  - Mode controls: `mode class`, `mode free`
-- Outside teacher console:
-  - `submit <assignment_id>` → quick way to generate a submission (for testing)
+## CLI admin (quick)
+`cargo run -- --mode cli`
+- Enter teacher console: type `teacher`, PIN (default 0000; `forgot` to use secret answer).
+- Commands: `create_pack`, `create_pack_multi`, `export_pack_template`, `import_pack <path>`, `import_submissions`, `show_completed`, `mode class`, `mode free`, `games on/off`, `allow_games_in_class`, `forbid_games_in_class`, `set_pin`, `set_secret`, `back`.
+- Outside console: `import_pack <path>`, `submit <assignment_id>`.
 
-## 6) Teacher GUI workflow (recommended)
-Start GUI: `cargo run -- --mode gui`
-- **Import a pack**: Home tab → “Import pack file…” (JSON). The app copies it to `homework/assigned/`, applies game policy, and rescans.
-- **Build a pack**: Home tab → “Pack builder (teacher)” → fill assignment fields, add to pack, export.
-- **Assign/filters**: Use assignment and subject dropdowns to filter metrics and lists.
-- **Metrics**: View class and per-student averages; multi-select students for focused metrics.
-- **Dashboard**: The Homework Dashboard module shows pack details, averages, and submission rows with titles, IDs, scores, and feedback.
-- **Submissions**: Scroll lists on Home or Dashboard to see submission rows; scores prefer AI pre-mark; attachments are listed in the submission JSON (not displayed inline).
+## Data layout (under `./data` or `--base-path`)
+- `config/` settings/UI, `homework/assigned/` packs, `homework/completed/` submissions, `models/` GGUF files, `modules/` manifests, `themes/`, `runtime/`, `logs/`, `revision/`, `ide/`.
 
-## 7) Moving files between teacher portal and students
-- Publish `homework_pack_*.json` to your school portal/shared drive.
-- Students download it into `homework/assigned/` (or use GUI import).
-- Students work offline, then export `submission_*.json` (with optional attachments) into `homework/completed/`, and upload to the portal.
-- Teachers download submissions and run `import_submissions` (CLI) or view them in the GUI/Dashboard.
+## Safety/offline
+- Offline-first; no network calls in core flows.
+- Content filter (Janet) on by default; external process modules disabled unless allowed.
 
-## 8) Safety and offline stance
-- Offline by default; no cloud calls in core flows.
-- External process modules are disabled unless explicitly allowed.
-- Content filter (“Janet”) is on by default to block swears/mature topics.
-
-## 9) Troubleshooting
-- Data not showing? Click “Rescan packs + submissions” on Home.
-- Games not toggling? Pack policy may disable games; re-import settings or adjust in teacher console.
-- Custom data path? Always pass `--base-path` to ensure you’re using the intended folder (e.g., USB).
-- Build issues? Ensure Rust is installed via rustup and rerun `cargo build`.
-
-## 10) License
-AGPL-3.0-or-later (see `LICENSE`).
+## Troubleshooting
+- Build errors: install LLVM/Clang, set `LIBCLANG_PATH`, rerun `cargo build`.
+- Missing packs/submissions: “Rescan packs + submissions” and confirm correct `--base-path`.
+- PIN issues: use Teacher menu or CLI `teacher` → `forgot` (secret answer), then set a new PIN.

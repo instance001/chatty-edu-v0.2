@@ -1,0 +1,11 @@
+{
+  "id": "homework_assignments",
+  "title": "Homework & Revision",
+  "version": "1.0.0",
+  "description": "View homework questions and revision tips",
+  "roles": ["teacher", "student"],
+  "entry": {
+    "type": "builtin_panel",
+    "target": "homework_assignments"
+  }
+}

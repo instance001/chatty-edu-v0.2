@@ -6,11 +6,12 @@ mod chat;
 mod gui;
 mod homework;
 mod homework_pack;
+mod local_model;
 mod modules;
 mod settings;
 mod theme;
 
-use chat::{generate_answer_stub, janet_filter};
+use chat::{generate_answer, janet_filter};
 use homework_pack::{
     apply_pack_policy, create_pack, create_pack_multi, export_pack_template, find_latest_pack,
     load_pack_from_file, load_submission_summaries, save_submission_with_answers,
@@ -158,7 +159,7 @@ fn run_cli(settings: &mut Settings, base_path: &Path) {
             continue;
         }
 
-        let raw_answer = generate_answer_stub(input);
+        let raw_answer = generate_answer(settings, input);
         let safe_answer = janet_filter(&settings.janet, &raw_answer, input);
 
         println!("Chatty: {safe_answer}\n");
@@ -180,13 +181,34 @@ fn handle_play_request(settings: &Settings) {
 }
 
 fn teacher_console(settings: &mut Settings, base_path: &Path) {
-    println!("\nEnter teacher PIN (stubbed for now, no check):");
+    println!("\nEnter teacher PIN (default 0000):");
+    println!("Type 'forgot' to answer the secret question.");
     print!("PIN: ");
     io::stdout().flush().unwrap();
 
     let mut pin_input = String::new();
     if let Err(e) = io::stdin().read_line(&mut pin_input) {
         println!("Failed to read PIN: {}", e);
+        return;
+    }
+
+    let pin_input = pin_input.trim();
+    if pin_input.eq_ignore_ascii_case("forgot") {
+        println!("Secret question: {}", settings.teacher_secret_question);
+        print!("Answer: ");
+        io::stdout().flush().unwrap();
+        let mut answer = String::new();
+        if let Err(e) = io::stdin().read_line(&mut answer) {
+            println!("Failed to read answer: {}", e);
+            return;
+        }
+        if answer.trim() != settings.teacher_secret_answer {
+            println!("Incorrect answer.\n");
+            return;
+        }
+        println!("Unlocked with secret question.\n");
+    } else if settings.teacher_pin != pin_input {
+        println!("Incorrect PIN.\n");
         return;
     }
 
@@ -224,6 +246,8 @@ fn teacher_console(settings: &mut Settings, base_path: &Path) {
         println!(
             "  import_pack <path>    (copy a pack file into homework/assigned/ and apply policy)"
         );
+        println!("  set_pin               (change teacher PIN; confirm twice)");
+        println!("  set_secret            (change secret question + answer)");
         println!("  back");
 
         print!("teacher> ");
@@ -346,6 +370,63 @@ fn teacher_console(settings: &mut Settings, base_path: &Path) {
                 }
                 println!("Exiting teacher console.\n");
                 break;
+            }
+            "set_pin" => {
+                let new_pin = match prompt("New PIN", "") {
+                    Ok(v) => v,
+                    Err(e) => {
+                        println!("Failed to read PIN: {}", e);
+                        continue;
+                    }
+                };
+                let confirm_pin = match prompt("Confirm PIN", "") {
+                    Ok(v) => v,
+                    Err(e) => {
+                        println!("Failed to read PIN confirmation: {}", e);
+                        continue;
+                    }
+                };
+                if new_pin.trim().is_empty() {
+                    println!("PIN cannot be empty.");
+                    continue;
+                }
+                if new_pin != confirm_pin {
+                    println!("PINs did not match. PIN unchanged.");
+                    continue;
+                }
+                settings.teacher_pin = new_pin;
+                if let Err(e) = save_settings(settings, base_path) {
+                    println!("PIN updated but failed to save settings: {}", e);
+                } else {
+                    println!("Teacher PIN updated.");
+                }
+            }
+            "set_secret" => {
+                let question = match prompt("New secret question", "") {
+                    Ok(v) => v,
+                    Err(e) => {
+                        println!("Failed to read question: {}", e);
+                        continue;
+                    }
+                };
+                let answer = match prompt("New secret answer", "") {
+                    Ok(v) => v,
+                    Err(e) => {
+                        println!("Failed to read answer: {}", e);
+                        continue;
+                    }
+                };
+                if question.trim().is_empty() || answer.trim().is_empty() {
+                    println!("Question and answer cannot be empty.");
+                    continue;
+                }
+                settings.teacher_secret_question = question.trim().to_string();
+                settings.teacher_secret_answer = answer.trim().to_string();
+                if let Err(e) = save_settings(settings, base_path) {
+                    println!("Secret updated but failed to save settings: {}", e);
+                } else {
+                    println!("Secret question/answer updated.");
+                }
             }
             _ => println!("Unknown command."),
         }

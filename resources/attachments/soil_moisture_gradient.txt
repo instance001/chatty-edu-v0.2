@@ -1,0 +1,9 @@
+Soil moisture transect (demo data)
+Location: River bank to hilltop
+Date: 2026-01-02
+
+Point A (river bank): very wet, standing water
+Point B: damp soil, moss present
+Point C: moist soil, grasses
+Point D: dry soil, sparse grass
+Point E (hilltop): very dry, bare patches

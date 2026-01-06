@@ -1,59 +1,36 @@
-# Chatty-EDU Student Manual (v0.3)
+# Chatty-EDU Student Manual (v0.4)
 
-Audience: Students with no prior setup experience. Everything runs offline; no accounts or cloud.
+Audience: students with zero setup experience. Everything runs offline; no accounts.
 
-## 1) What you need
-- A Windows PC (builds target Windows first).
-- Rust toolchain (install via https://rustup.rs).
-- If your teacher gives you a USB with Chatty-EDU, use it directly; otherwise, download/clone the project.
+## Quick start (prebuilt)
+1) Open `chatty-edu.exe` (or run it from a terminal) in the folder provided to you.
+2) Models: bring your own GGUF (none is bundled here). If your teacher gives you one, drop it in `data/models/` and choose it via File -> Models. Model guidance lives in `resources/models/` (e.g., `resources/models/qwen/README.md`).
+3) Import homework: Home tab → “Import pack file” to load `homework_pack_*.json` (or copy it into `data/homework/assigned/`).
+4) Pick your assignment in Home. Read the instructions.
+5) Under “Submit work,” type your answers. Add attachments if your teacher asked.
+6) Click “Export submission file” to save `submission_<assignment_id>_<your_id>.json` into `data/homework/completed/`. Upload that JSON (and any attachments) via your normal hand-in method.
 
-## 2) Install and run
-1. Open a terminal in the project folder.
-2. Build and run GUI (recommended):  
-   ```bash
-   cargo run -- --mode gui
-   ```
-   CLI mode (advanced):  
-   ```bash
-   cargo run -- --mode cli
-   ```
-3. Data location: by default, the app uses `./data` next to the executable. If using a USB, you can keep everything there or set `--base-path` to the USB path.
+## Quick start (build yourself)
+1) Install Rust (`https://rustup.rs`) and LLVM/Clang (set `LIBCLANG_PATH` to its `bin` folder).
+2) In the project folder: `cargo run -- --mode gui` (or `--mode cli`).
+3) Follow the same steps as “Quick start (prebuilt)” to import a pack and submit work.
 
-## 3) Where your files live
-- `homework/assigned/` — place homework packs from your teacher here (files named `homework_pack_*.json`).
-- `homework/completed/` — your exported submissions (files named `submission_*.json`).
-- `themes/`, `config/`, `modules/` — app settings/themes; you normally don’t edit these.
+## Homework & Revision
+- Homework packs live in `data/homework/assigned/`. If you don’t see yours, click “Rescan packs + submissions” on Home.
+- The Homework & Revision module has “Ask for hints” and an “LLM homework helper” tied to the selected assignment. These give hints, not full answers (teacher can configure hints-only).
+- Chat tab is for general learning questions (still filtered for safety).
 
-## 4) Basic flow (GUI)
-1. Get a homework pack (JSON) from your teacher/portal.
-2. Start Chatty-EDU GUI: `cargo run -- --mode gui`.
-3. Home tab → “Import pack file…” and pick the pack; it will copy into `homework/assigned/`.
-4. Open the assignment list (filters by assignment/subject are available). Select the assignment you’re working on.
-5. In “Submit work,” type your answers. Click “Add attachments…” if you need to include files (photos, PDFs, etc.).
-6. Click “Export submission file” to save a `submission_<assignment_id>_<your_id>.json` into `homework/completed/`.
-7. Upload that submission file (and any attachments if required) to your school portal or hand-in method.
+## File locations (auto-created under `data/`)
+- `homework/assigned/` — homework packs (`homework_pack_*.json`)
+- `homework/completed/` — your exported submissions (`submission_*.json`)
+- `models/` — local GGUF models; pick via File → Models
+- `config/`, `themes/`, `modules/` — app settings/themes (usually leave alone)
 
-## 5) CLI quick commands (optional)
-Run CLI mode: `cargo run -- --mode cli`
-- `import_pack <path>` — copy a pack into `homework/assigned/`.
-- `submit <assignment_id>` — prompt for answers and optional attachment paths (comma-separated) and save a submission JSON to `homework/completed/`.
-- `exit` — quit.
+## Tips
+- If you change computers, keep the whole `data/` folder with you (USB-friendly). Run with `--base-path <USB path>` to force data onto the USB.
+- If the tutor says it can’t give the answer, ask for steps or key ideas instead.
+- Teacher-only settings (filters, games, hints-only toggle) are locked behind the Teacher PIN; students can’t change them.
 
-## 6) Metrics view
-In the GUI, the Home tab and the Homework Dashboard module show:
-- Assignment and subject filters.
-- Class/subject averages (for teachers); you can ignore these if just working solo.
-- Per-student bars (if multiple students’ submissions are present in the same folder).
-
-## 7) Staying offline and safe
-- Chatty-EDU works without internet; no accounts.
-- External add-on programs are disabled by default for safety.
-- The content filter (“Janet”) blocks swears/mature topics by default.
-
-## 8) Tips
-- Keep your pack and submissions on the same USB if you want portability; run with `--base-path <USB path>` to keep everything together.
-- Always upload the generated `submission_*.json` to your portal; attachments may also be needed if the teacher asked.
-- If you can’t see your assignment, click “Rescan packs + submissions” in the Home tab.
-
-## 9) License
-AGPL-3.0-or-later (see `LICENSE`). You’re free to use and share within the license terms.
+## Staying offline and safe
+- Chatty-EDU works without internet; no cloud calls in normal use.
+- Content filter (Janet) is on by default to block swears/mature topics.

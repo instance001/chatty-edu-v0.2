@@ -2,10 +2,13 @@
 
 Offline, local-first learning assistant for schools. No cloud, no accounts, no tracking. Ships as a single Rust binary with an egui desktop shell (Windows first) plus a CLI mode. Licensed under AGPLv3.
 
+Chatty-EDU never connects to the internet and does not require external services to function.
+
 Designed for schools and boards:
 - Runs entirely on school hardware; bring your own offline model (GGUF).
 - Teacher PIN is meant to be changed on first login; keep the teacher menu locked in student-facing setups.
-- Districts can drop in their preferred models; start with the bundled small model, then replace as needed.
+- Default PINs and secrets exist only for first-run convenience and are intended to be changed immediately.
+- Districts can drop in their preferred models; documentation includes guidance for recommended small models, which can be replaced as needed.
 - Works without internet; external processes are disabled unless explicitly allowed.
 
 Design intent and boundaries: see `DESIGN_INTENT.md`. Public-safe sample packs and submission templates live in `resources/`.
@@ -135,5 +138,6 @@ Entry types: `builtin_panel`, `markdown`, `static_html` (external_process exists
 - External process modules are disabled unless explicitly allowed.
 - Content filter (Janet) is enabled by default and operates entirely offline.
 - Homework packs, submissions, and AI pre-mark outputs are stored locally as readable JSON files.
+- There is no telemetry, analytics, logging to third parties, or remote kill-switch.
 
 

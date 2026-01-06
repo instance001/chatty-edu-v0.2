@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.4
+
+- Public-ready release with cleaned repository structure.
+- Offline, BYO-model design clarified (no model weights included).
+- Resources folder added with model attribution and licenses.
+- Hash-chained homework submissions for tamper-evidence.
+- Chat and Homework UX stabilized (scrolling, theme contrast fixes).
+- Documentation aligned for teachers, students, and reviewers.
+
 ## v0.3
 - GUI shell (eframe/egui) with menu + tabs, themes, and built-in Homework Dashboard.
 - Homework packs: import/export, assignment and subject filters, class/student metrics.
